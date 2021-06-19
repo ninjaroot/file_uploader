@@ -19,22 +19,38 @@ con.connect(function(err) {
   console.log("Connected!");
 });
 
+exec('mkdir uploads', (error, re, stderr) => {
+})    
+
+
+
+function insert(data){
+
+  var sql = "INSERT INTO `data` (`firstname`, `lastname` ,`email`,`phone`,`age`) VALUES ('" + data + "','" + data + "','" + data + "','"+ data + "','" +data + "')";
+  //console.log(data+"+data")
+  con.query(sql, function (err, result) {
+    if (err) throw err;
+    console.log(err)
+  })
+
+
+}
 
 http.createServer(function(req, res) {
   if (req.method === 'POST') {
-    exec('mkdir uploads', (error, re, stderr) => {
-    })    
     var busboy = new Busboy({ headers: req.headers });
     busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
       var saveTo = "uploads/" + filename + ".png"
       file.pipe(fs.createWriteStream(saveTo));
     });
   busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated, encoding, mimetype) {
-    console.log('Field [' + fieldname + ']: value: ' + val);
+data=[]
+data.push(val);
+console.log(data);
   });
     busboy.on('finish', function() {
       res.writeHead(200, { 'Connection': 'close' });
-      res.end("That's all folks!");
+      res.end("upload done");
     });
     return req.pipe(busboy);
   res.writeHead(404);
@@ -45,7 +61,11 @@ http.createServer(function(req, res) {
     res.writeHead(200, { Connection: 'close' });
     res.end('<html><body> \
 <form action="fileupload" method="POST" enctype="multipart/form-data" > \
-<input type="text" id="sssss" name="ssssss"> \
+<input type="text" id="firstname" name="firstname"> \
+<input type="text" id="lastname" name="lastname"> \
+<input type="text" id="email" name="email"> \
+<input type="text" id="phone" name="phone"> \
+<input type="text" id="age" name="age"> \
 <input type="file" id="files" name="files" multiple><br><br> \
 <input type="submit"></form></body></html>')
   }
