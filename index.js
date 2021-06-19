@@ -2,11 +2,28 @@ var http = require('http'),
     path = require('path'),
     os = require('os'),
     fs = require('fs');
- 
 var Busboy = require('busboy');
- 
+var mysql = require('mysql2');
+const { exec } = require('child_process');
+
+
+var con = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "raspi#@!",
+  database: "users"
+});
+
+con.connect(function(err) {
+  if (err) throw err;
+  console.log("Connected!");
+});
+
+
 http.createServer(function(req, res) {
   if (req.method === 'POST') {
+    exec('mkdir uploads', (error, re, stderr) => {
+    })    
     var busboy = new Busboy({ headers: req.headers });
     busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
       var saveTo = "uploads/" + filename + ".png"
