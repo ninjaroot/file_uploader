@@ -3,43 +3,35 @@ var http = require('http'),
     os = require('os'),
     fs = require('fs');
 var Busboy = require('busboy');
-//var mysql = require('mysql2');
 const { exec } = require('child_process');
-
-
-var mysql      = require('mysql');
-
-var con = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "raspi#@!",
-  database: "users"
-});
-
 var formData = {}
 
-con.connect(function(err) {
-  if (err) throw err;
-  console.log("Connected!");
-});
 
-exec('mkdir uploads', (error, re, stderr) => {
+exec('mkdir /home/pi/temp_uploads', (error, re, stderr) => {
 })    
 
+function save_data(data) {
+var dir = "/home/pi/face/Data_set/"+data.name
+if (!fs.existsSync(dir)){
+    fs.mkdir(dir,function() {
+  console.log("dir made")
+  fs.readdir("/home/pi/temp_uploads/", (err, files) => {
+    files.forEach(file => {
+	fs.rename("/home/pi/temp_uploads/"+file,dir+"/"+file,function() {
+      console.log(file);
+      })
+    });
+  });
 
-
-function insert(data){
-  con.query("INSERT INTO `data`  SET ?",data, function (err, result) {
-    if (err) throw err;
-    console.log(err)
-  })
+ })
+ }
 }
 
 http.createServer(function(req, res) {
   if (req.method === 'POST') {
     var busboy = new Busboy({ headers: req.headers });
     busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-      var saveTo = "uploads/" + filename
+      var saveTo = "/home/pi/temp_uploads/" + filename
       file.pipe(fs.createWriteStream(saveTo));
     });
   busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated, encoding, mimetype) {
@@ -48,7 +40,7 @@ http.createServer(function(req, res) {
     busboy.on('finish', function() {
       res.writeHead(200, { 'Connection': 'close' });
       res.end("upload done");
-      insert(formData)
+      save_data(formData)
     });
     return req.pipe(busboy);
   res.writeHead(404);
@@ -59,11 +51,7 @@ http.createServer(function(req, res) {
     res.writeHead(200, { Connection: 'close' });
     res.end('<html><body> \
 <form action="fileupload" method="POST" enctype="multipart/form-data" > \
-<input type="text" id="firstname" name="firstname"> \
-<input type="text" id="lastname" name="lastname"> \
-<input type="text" id="email" name="email"> \
-<input type="text" id="phone" name="phone"> \
-<input type="text" id="age" name="age"> \
+<input type="text" id="name" name="name"> \
 <input type="file" id="files" name="files" multiple><br><br> \
 <input type="submit"></form></body></html>')
   }
