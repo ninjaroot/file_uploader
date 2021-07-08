@@ -3,9 +3,11 @@ var http = require('http'),
     os = require('os'),
     fs = require('fs');
 var Busboy = require('busboy');
-var mysql = require('mysql2');
+//var mysql = require('mysql2');
 const { exec } = require('child_process');
 
+
+var mysql      = require('mysql');
 
 var con = mysql.createConnection({
   host: "localhost",
@@ -13,6 +15,8 @@ var con = mysql.createConnection({
   password: "raspi#@!",
   database: "users"
 });
+
+var formData = {}
 
 con.connect(function(err) {
   if (err) throw err;
@@ -25,32 +29,26 @@ exec('mkdir uploads', (error, re, stderr) => {
 
 
 function insert(data){
-
-  var sql = "INSERT INTO `data` (`firstname`, `lastname` ,`email`,`phone`,`age`) VALUES ('" + data + "','" + data + "','" + data + "','"+ data + "','" +data + "')";
-  //console.log(data+"+data")
-  con.query(sql, function (err, result) {
+  con.query("INSERT INTO `data`  SET ?",data, function (err, result) {
     if (err) throw err;
     console.log(err)
   })
-
-
 }
 
 http.createServer(function(req, res) {
   if (req.method === 'POST') {
     var busboy = new Busboy({ headers: req.headers });
     busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-      var saveTo = "uploads/" + filename + ".png"
+      var saveTo = "uploads/" + filename
       file.pipe(fs.createWriteStream(saveTo));
     });
   busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated, encoding, mimetype) {
-data=[]
-data.push(val);
-console.log(data);
+    formData[fieldname] = val
   });
     busboy.on('finish', function() {
       res.writeHead(200, { 'Connection': 'close' });
       res.end("upload done");
+      insert(formData)
     });
     return req.pipe(busboy);
   res.writeHead(404);
